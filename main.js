@@ -3,12 +3,12 @@ let inputResultado = document.querySelector('#resultado');
 
 inputExpressao.addEventListener('blur', () => {
     // let expressao = inputExpressao.value;
-    // let expressao = '20 +2 * 6 /2 - 5';
-    let expressao = '5 + 4 - 3 + 6 / 1 * 5'
+    let expressao = '20 + 2 * 6 / (2 - 7)';
+    // let expressao = '5 + 4 - 3 + 6 / 1 * 5';
     console.log(expressao);
     
-    let operandos = expressao.split(/[\+\-\*\/]/).map(e => parseFloat(e));
-    let operadores = expressao.split(/\s?\d+\s?/).filter( e => e != '');
+    let operandos = extraiOperandos(expressao);
+    let operadores = extraiOperadores(expressao);
 
     console.log(operandos);
     console.log(operadores);
@@ -18,13 +18,25 @@ inputExpressao.addEventListener('blur', () => {
         let a = operandos[indice];
         let b = operandos[indice + 1];
         let op = operadores[indice];
+        let c = 0;
         
-        let c = aplicar(a, b, op);
+        if(op == '(') {
+            let op = operadores.splice(indice+1, 1);
+            operadores.splice(operadores.indexOf(')'), 1);
+            c = aplicar(a, b, op);    
+            console.table([a, op, b, c]);
+        }
+        else {
+            c = aplicar(a, b, op);
+            console.table([a, op, b, c]);
+        }
      
-        console.table([a, op, b, c]);
         operandos[indice] = c;
         operandos.splice(indice + 1, 1);
         operadores.splice(indice, 1);
+
+        console.log(operadores);
+        console.log(operandos);
 
     }
 
@@ -46,6 +58,13 @@ function procuraPrimeiraOperacao(operadores) {
     for(let i = 0; i < operadores.length; i++) {
         let operador = operadores[i];
 
+        if(operador == '(') {
+            if(peso < 3) {
+                indice = i;
+                peso = 3;
+            }
+        }
+
         if(operador == '*' || operador == '/') {
             if(peso < 2) {
                 indice = i;
@@ -61,4 +80,15 @@ function procuraPrimeiraOperacao(operadores) {
         }
     }
     return indice;
+}
+
+function extraiOperandos(expressao) {
+    return expressao.split(/\D+/)
+                    .filter(e => e != '')
+                    .map(e => parseFloat(e));
+}
+
+function extraiOperadores(expressao) {
+    return expressao.split(/\s?\d+\s?|\s/)
+                    .filter( e => e != '');
 }
