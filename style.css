@@ -1,6 +1,6 @@
 * {
     margin: 0;
-    border: 0;
+    padding: 0;
     box-sizing: border-box;
     font-size: 16px;
 }
@@ -8,19 +8,18 @@
 .calculadora {
     background-color: #4e4e4e;
     width: 360px;
-    height: 540px;
+    height: 560px;
 
     display: flex;
     flex-direction: column;
     margin: 1rem;
+    border-radius: 0.5rem;
 }
 
 .visor {
     height: 160px;
     width: 360px;
     display: flex;
-    /* border-top: 1px solid yellow;
-    border-bottom: 1px solid yellow; */
 }
 
 .visor input {
@@ -28,10 +27,13 @@
     width: 90%;
     display: block;
     margin: auto;
-
+    background-color: #bcd4b3;
+    border: none;
+    border-top: 3px solid #979797;
+    border-left: 3px solid #979797;
 }
 
-.input {
+.entrada {
     height: 80px;
     width: 360px;
     border-top: 1px solid white;
@@ -40,53 +42,74 @@
 
 }
 
-.input input {
+.entrada input {
     height: 70%;
     width: 90%;
     display: block;
     margin: auto;
-}
-
-.linha {
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-}
-
-.linha:first-child {
-    margin-top: 8px;
+    outline: none;
 }
 
 .teclado {
     width: 360px;
     height: calc(100% - 160px - 80px);
-    /* border-top: 1px solid blue;
-    border-bottom: 1px solid blue; */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.linha {
+    width: 90%;
+    height: 80%;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+.linha:first-child {
+    margin-top: 0.875rem;
+}
+
+.linha:last-child {
+    margin-bottom: 0.875rem;
 }
 
 button {
-    /* display: inline-block; */
-    height: 52px;
-    width: 64px;
-    /* float: left; */
-    margin: 2px;
+    height: 3.25rem;
+    width: 23%;
 
-    background-color: #aaaaaa;
+    background-color: #bfbfbf;
     outline: none;
     border: 1px solid black;
 
     border-radius: 8px;
-
-    /* font-weight: bold; */
+    font-weight: bold;
 }
 
 button:hover {
     cursor: pointer;
-    background-color: #878787;
+    background-color: #959595;
     transition: 0.25s;
 }
 
+.operacao {
+    background-color: #e75757;
+    color: white;
+}
+
+.operacao:hover {
+    background-color: #ad3c3c;
+}
+
 .calcular {
-    /* height: 104px; */
-    float: right;
+    background-color: #00b91f;
+    color: white;
+}
+
+.calcular:hover {
+    background-color: #11a029;
+}
+
+.soma, .subtracao, .igual {
+    font-size: 1.375rem;
 }
