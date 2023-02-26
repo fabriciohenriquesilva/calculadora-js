@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono&family=Poppins:wght@400;600&display=swap');
+
 * {
     margin: 0;
     padding: 0;
@@ -22,7 +24,7 @@
     display: flex;
 }
 
-.visor input {
+.visor textarea {
     height: 80%;
     width: 90%;
     display: block;
@@ -31,6 +33,9 @@
     border: none;
     border-top: 3px solid #979797;
     border-left: 3px solid #979797;
+    text-align: right;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1.125rem;
 }
 
 .entrada {
@@ -48,6 +53,8 @@
     display: block;
     margin: auto;
     outline: none;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1.125rem;
 }
 
 .teclado {

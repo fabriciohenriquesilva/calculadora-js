@@ -12,15 +12,16 @@
 <body>    
     <main class="calculadora">
         <div class="visor">
-            <input type="text" disabled id="resultado">
+            <textarea cols="5" rows="5" disabled id="resultado">
+            </textarea>
         </div>
         <div class="entrada">
             <input type="text" id="expressao">
         </div>
         <div class="teclado">
             <div class="linha">
-                <button class="operacao">C</button>
-                <button class="operacao">CE</button>
+                <button class="operacao" id="limpar">C</button>
+                <button class="operacao" id="cancelar">CE</button>
                 <button class="operacao">(</button>
                 <button class="operacao">)</button>
             </div>
@@ -45,7 +46,7 @@
             <div class="linha">
                 <button>0</button>
                 <button>,</button>
-                <button class="calcular igual">=</button>
+                <button class="calcular igual" id="calcular">=</button>
                 <button class="operacao soma">+</button>
             </div>
         </div>
