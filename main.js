@@ -1,6 +1,13 @@
 let inputExpressao = document.querySelector('#expressao');
 let inputResultado = document.querySelector('#resultado');
 
+let inputDigitos = document.querySelectorAll('.digito');
+inputDigitos.forEach(e => { 
+    e.addEventListener('click', function() {
+        inputExpressao.value += this.innerHTML;
+    });
+});
+
 let btnLimparHistorico = document.querySelector('#limpar');
 btnLimparHistorico.addEventListener('click', () => {
     inputResultado.value = '';
@@ -122,7 +129,7 @@ function extraiNumeros(expressao) {
                 if(/\d/.test(arr[j]) || arr[j] == '.') {
                     numeroString += arr[j];
                     i = j;
-                    continue;
+                    continue; // break faz 1.5 + 2.5 funcionar
                 }
                 if(/[+*-\/()]/.test(arr[j]) || j == arr.length-1) {
                     i = j;
