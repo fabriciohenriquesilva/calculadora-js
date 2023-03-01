@@ -19,7 +19,21 @@ btnCalcular.addEventListener('click', calcular);
 let btnLimparEntrada = document.querySelector('#cancelar');
 btnLimparEntrada.addEventListener('click', () => {
     inputExpressao.value = '';
-})
+});
+
+let testes = [
+    "20+2*6/2-5",
+    "2*(2+3)",
+    "2*2+3",
+    "2+2*3",
+    "-20+2*6/(-2-7)",
+    "-20+2*6/(2-7)",
+    "5+4-3+6/1*5",
+    "-5+4-3+6-3/1*5",
+    "-20-(104*5)+1",
+    "1.5+2.5",
+    "-20+2*6/-(-2-1)"
+]
 
 function calcular() {
     let expressao = inputExpressao.value;
@@ -34,21 +48,26 @@ function calcular() {
         let c = 0;
         let indice = procuraPrimeiraOperacao(sinais);
         let op = sinais[indice];
+        // console.log(op)
 
         if (op == ')') {
             let inicio = buscarParentesesDeAbertura(indice, sinais);
-            let s = sinais.splice(inicio, indice);
-            let n = numeros.slice(inicio, indice);
+            // console.log(indice, op, inicio);
+            let s = sinais.splice(inicio, indice-inicio+1);
+            // console.log(s, sinais)
+            let n = numeros.splice(inicio, indice-inicio);
             c = resolverParenteses(s, n);
-            
-            numeros[inicio] = c;
-            numeros.splice(inicio+1, n.length);
+            // console.log(c)
+            numeros.splice(inicio, 0, c);
         }
         else {
             let a = numeros[indice];
             let b = numeros[indice + 1];
+            // console.log(numeros)
 
             c = aplicar(a, b, op);
+            // console.table([a, op, b, c]);
+
             numeros[indice] = c;
             numeros.splice(indice + 1, 1);
             sinais.splice(indice, 1);
@@ -98,48 +117,65 @@ function procuraPrimeiraOperacao(operadores) {
 
 function extraiSinais(expressao) {
     let arr = expressao.replaceAll(',', '.').split('')
-        .filter(e => e != ' ')
-        .filter(e => /\D/.test(e))
+        .filter(e => e != ' ');
+
+    // console.log(arr)
+    for(let i = 0; i < arr.length; i++) {
+        if(i > 0 && arr[i] == '-' && arr[i-1] == '(') {
+            // console.log([i, arr[i]]);
+            arr.splice(i, 1);
+        }
+        // if(arr[i] == '-' && arr[i+1] == '(') {
+        //     arr[i] = '*';
+        // }
+    }
+
+    arr = arr.filter(e => /\D/.test(e))
         .filter(e => e != '.');
-    
-    if(arr[0] == '-'){
+
+    if(arr[0] == '-' && arr.length > 1){
         arr.splice(0, 1);
     }
-    
+        
     return arr;
 }
 
 function extraiNumeros(expressao) {
     let arr = expressao.replaceAll(',', '.').split('').filter(e => e != ' ');
 
-    console.log(arr);
+    // console.log(arr);
 
     let numeroString = '';
     let numeros = [];
 
     for(let i = 0; i < arr.length; i++){
-        if(/\d/.test(arr[i]) || arr[i] == '-' || arr[i] == '.'){
+        // console.log([i, arr[i], numeroString]);
+        if( (i == 0 || arr[i-1] == '(') && arr[i] == '-') {
             numeroString += arr[i];
+            continue;
+        }
 
-            if(i+1 >= arr.length) {
-                numeros.push(numeroString);
-            }
+        if(/\d/.test(arr[i]) || arr[i] == '.'){
+            numeroString += arr[i];
+        }
+        
+        if(/[-+*\/]/.test(arr[i])) {
+            // if(arr[i] == '-' && arr[i+1] == '(') {
+            //     console.log(i)
+            //     numeros.push(-1);
+            //     numeroString = '';
+            // }
+            // else{
+            numeros.push(numeroString);
+            numeroString = '';
+        }
+        // else {
+        //     console.log("Operação inválida");
+        // }
 
-            for(let j = i+1; j < arr.length; j++) {
-                if(/\d/.test(arr[j]) || arr[j] == '.') {
-                    numeroString += arr[j];
-                    i = j;
-                    continue; // break faz 1.5 + 2.5 funcionar
-                }
-                if(/[+*-\/()]/.test(arr[j]) || j == arr.length-1) {
-                    i = j;
-                    if(arr[j] != '('){
-                        numeros.push(numeroString);
-                        numeroString = '';
-                    }
-                    break;
-                }
-            }
+        if(i == arr.length-1) {
+            numeros.push(numeroString);
+            numeroString = '';
         }
     }
     return numeros.map(e => parseFloat(e));
@@ -164,6 +200,7 @@ function resolverParenteses(sinais, numeros) {
         let b = numeros[indice+1];
         let op = arr[indice];
         let c = aplicar(a, b, op);
+        // console.table([a, op, b, c]);
         
         numeros[indice] = c;
         numeros.splice(indice + 1, 1);
