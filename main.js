@@ -15,7 +15,7 @@ btnLimparHistorico.addEventListener('click', () => {
 
 let btnCalcular = document.querySelector('#calcular');
 btnCalcular.addEventListener('click', () => {
-    avaliarExpressao(inputExpressao.value)
+    avaliarExpressao(inputExpressao.value);
 });
 
 let btnLimparEntrada = document.querySelector('#cancelar');
@@ -24,64 +24,75 @@ btnLimparEntrada.addEventListener('click', () => {
 });
 
 let testes = [
-    "20+2*6/2-5",
-    "2*(2+3)",
-    "2*2+3",
-    "2+2*3",
-    "-20+2*6/(-2-7)",
-    "-20+2*6/(2-7)",
-    "5+4-3+6/1*5",
-    "-5+4-3+6-3/1*5",
-    "-20-(104*5)+1",
-    "1.5+2.5",
-    "-20+2*6/-(-2-1)"
+    "20+2*6/2-5", // 21
+    "2*(2+3)", // 10
+    "2*2+3", // 7
+    "2+2*3", // 8
+    "-20+2*6/(-2-7)", // -21.3333332
+    "-20+2*6/(2-7)", // -22.4
+    "5+4-3+6/1*5", // 36
+    "-5+4-3+6-3/1*5", // -13
+    "-20-(104*5)+1", // -539
+    "-20-(-104*5)+1", // 501
+    "1.5+2.5", // 4
+    "(-5+(3+(2*3-(-2.5*-2+5/3))+7))", // 4.3333
+    "-5+(3+(2*3-(-2.5*-2))+7)", // 6
+    "-5+(3+(2*3-(-2.5*(-2)))+7)", // 6
+    "(2+3*4)-4", // 10
+    "((2+3)*4)-4/-(3-1)", // 22
+    "((2+3)*4)-4/-(-3-1)", // 19
+    "-20+2*6/-(-2-1)", // -16
+    "-20+(2*6/-(-2-1)+5*2)" // -6
 ];
 
 function exibirResultadoNoVisor(resultado) {
-    inputResultado.value += `${inputExpressao.value} = ${resultado}\n`
+    inputResultado.value += `${inputExpressao.value} = ${resultado}\n`;
 }
 
 function avaliarExpressao(expressao) {
     let arr = expressao.replaceAll(',', '.').split('').filter(e => e != ' ');
 
     while( arr.findIndex(e => e == ')' ) >= 0 ) {
-        let i = arr.findIndex(e => e == ')' )
+        let fimParenteses = arr.findIndex(e => e == ')' );
 
-        let inicio = buscarParentesesDeAbertura(i, arr);
-        console.log("Posição do parentese final:", i)
-        console.log("Posição do parentese inicial:", inicio)
+        let inicioParenteses = buscarParentesesDeAbertura(fimParenteses, arr);
         
-        let miniExpressao = arr.slice(inicio, i+1).join('');
-        console.log("Expressão a ser resolvida:", miniExpressao);
+        let expressaoEntreParenteses = arr.slice(inicioParenteses, fimParenteses+1);
         
-        let resultado = resolverExpressao(miniExpressao);
+        let resultado = resolverExpressao(expressaoEntreParenteses);
 
-        console.log(resultado)
-        arr.splice(inicio, i-inicio+1, resultado);
-        console.log(arr)
-
+        arr.splice(inicioParenteses, fimParenteses-inicioParenteses+1, resultado);
     }
 
-    let resultado = resolverExpressao(arr.join(''));
-    console.log("O resultado final é", resultado)
+    let resultado = resolverExpressao(arr);
     exibirResultadoNoVisor(resultado);
 
 }
 
 function resolverExpressao(expressao) {
-    let expr = expressao.split('').filter(e => e != '(' && e != ')')
-    console.log(expr)
+    let expr = expressao.filter(e => e != '(' && e != ')' && e != '')
     let numeros = extraiNumeros(expr);
     let operadores = extraiSinais(expr);
-
-    console.log(numeros)
-    console.log(operadores)
 
     if(operadores.length == 0) {
         return numeros[0];
     }
     else {
-        return resolverParenteses(operadores, numeros);
+        while(operadores.length > 0){
+            let indice = procuraPrimeiraOperacao(operadores);
+            
+            let a = numeros[indice];
+            let b = numeros[indice+1];
+            let op = operadores[indice];
+            let c = aplicar(a, b, op);
+            
+            numeros[indice] = c;
+            numeros.splice(indice + 1, 1);
+            operadores.splice(indice, 1);
+        }
+    
+        let resultado = numeros[0];
+        return resultado;
     }
 }
 
@@ -137,7 +148,7 @@ function extraiSinais(expressao) {
 
     for(let i = 0; i < arr.length; i++) {
         if(/[+*\/]/.test(arr[i])) {
-            operadores.push(arr[i])
+            operadores.push(arr[i]);
         }
         else if(arr[i] == '-' && /\d/.test(arr[i-1]) && /\d/.test(arr[i+1])) {
             operadores.push(arr[i]);
@@ -154,27 +165,32 @@ function extraiNumeros(expressao) {
 
     for(let i = 0; i < arr.length; i++){
         if( arr[i] == '-' && ( /[+*\/]/.test(arr[i-1]) || i == 0) ) {
-            numeroString += arr[i];
-            continue;
-        }
 
+            if(arr[i+1] < 0) {
+                arr[i+1] *= -1;
+                arr.splice(i, 1);
+            }
+            else {
+                numeroString += arr[i];
+                continue;
+            }
+        }
+        
         if(/\d/.test(arr[i]) || arr[i] == '.'){
             numeroString += arr[i];
         }
-        
-        if(/[-+*\/]/.test(arr[i])) {
+        else if(/[-+*\/]/.test(arr[i])) {
             numeros.push(numeroString);
             numeroString = '';
         }
 
         if(i == arr.length-1) {
             if(numeroString != '') {
-                numeros.push(numeroString)
-                numeroString = ''
+                numeros.push(numeroString);
+                numeroString = '';
             }
         }
     }
-    console.log(numeros)
     return numeros.map(e => parseFloat(e));
 }
 
@@ -185,24 +201,4 @@ function buscarParentesesDeAbertura(indice, arr) {
         }
     }
     return -1;
-}
-
-function resolverParenteses(sinais, numeros) {
-    let arr = sinais;
-    
-    while(arr.length > 0){
-        let indice = procuraPrimeiraOperacao(arr);
-        
-        let a = numeros[indice];
-        let b = numeros[indice+1];
-        let op = arr[indice];
-        let c = aplicar(a, b, op);
-        
-        numeros[indice] = c;
-        numeros.splice(indice + 1, 1);
-        arr.splice(indice, 1);
-    }
-
-    let resultado = numeros[0];
-    return resultado;
 }
