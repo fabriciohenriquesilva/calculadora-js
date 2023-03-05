@@ -42,7 +42,9 @@ let testes = [
     "((2+3)*4)-4/-(3-1)", // 22
     "((2+3)*4)-4/-(-3-1)", // 19
     "-20+2*6/-(-2-1)", // -16
-    "-20+(2*6/-(-2-1)+5*2)" // -6
+    "-20+(2*6/-(-2-1)+5*2)", // -6
+    "-(1.25-2.51)", // 1.259999999998
+    "-(-1.25-2.51)" // 3.76
 ];
 
 function exibirResultadoNoVisor(resultado) {
@@ -51,6 +53,13 @@ function exibirResultadoNoVisor(resultado) {
 
 function avaliarExpressao(expressao) {
     let arr = expressao.replaceAll(',', '.').split('').filter(e => e != ' ');
+    
+    if(possuiParentesesIncompletos(arr)) {
+        return exibirResultadoNoVisor("Parenteses incompletos");
+    }
+    if(possuiOperadoresInconsistentes(arr)) {
+        return exibirResultadoNoVisor("Operadores inconsistentes");
+    }
 
     while( arr.findIndex(e => e == ')' ) >= 0 ) {
         let fimParenteses = arr.findIndex(e => e == ')' );
@@ -102,6 +111,7 @@ function aplicar(a, b, operador) {
     if (operador == '*') return a * b;
     if (operador == '/') {
         if(b == 0) {
+            exibirResultadoNoVisor("Não é permitido dividir por zero");
             throw new Error("Não é permitido dividir por zero");
         }   
         else {
@@ -201,4 +211,38 @@ function buscarParentesesDeAbertura(indice, arr) {
         }
     }
     return -1;
+}
+
+function possuiParentesesIncompletos(expressao) {
+    let arr = expressao;
+    let qtdeParenteseAbrindo = 0;
+    let qtdeParenteseFechando = 0;
+
+    for(let i = 0; i < arr.length; i++) {
+        if(arr[i] == '(') {
+            qtdeParenteseAbrindo++;
+        }
+        if(arr[i] == ')') {
+            qtdeParenteseFechando++;
+        }
+    }
+
+    if(qtdeParenteseAbrindo != qtdeParenteseFechando) {
+        return true;
+    }
+    return false;
+}
+
+function possuiOperadoresInconsistentes(expressao) {
+    let arr = expressao;
+    for(let i = 0; i < arr.length; i++) {
+        let elemento = arr[i];
+
+        if( /[+*\/]/.test(elemento) ) {
+            if( /[+*\/]/.test(arr[i+1]) ) {
+                return true;
+            }
+        }
+    }
+    return false;
 }
