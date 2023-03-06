@@ -7,6 +7,10 @@
     font-size: 16px;
 }
 
+/* body {
+    background-color: #83652d;
+} */
+
 .calculadora {
     background-color: #4e4e4e;
     width: 360px;
@@ -36,6 +40,7 @@
     text-align: right;
     font-family: 'JetBrains Mono', monospace;
     font-size: 1.125rem;
+    padding: 0.25rem
 }
 
 .entrada {

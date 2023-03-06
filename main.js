@@ -14,7 +14,9 @@ btnLimparHistorico.addEventListener('click', () => {
 });
 
 let btnCalcular = document.querySelector('#calcular');
-btnCalcular.addEventListener('click', calcular);
+btnCalcular.addEventListener('click', () => {
+    avaliarExpressao(inputExpressao.value);
+});
 
 let btnLimparEntrada = document.querySelector('#cancelar');
 btnLimparEntrada.addEventListener('click', () => {
@@ -22,66 +24,100 @@ btnLimparEntrada.addEventListener('click', () => {
 });
 
 let testes = [
-    "20+2*6/2-5",
-    "2*(2+3)",
-    "2*2+3",
-    "2+2*3",
-    "-20+2*6/(-2-7)",
-    "-20+2*6/(2-7)",
-    "5+4-3+6/1*5",
-    "-5+4-3+6-3/1*5",
-    "-20-(104*5)+1",
-    "1.5+2.5",
-    "-20+2*6/-(-2-1)"
-]
+    "20+2*6/2-5", // 21
+    "2*(2+3)", // 10
+    "2*2+3", // 7
+    "2+2*3", // 8
+    "-20+2*6/(-2-7)", // -21.3333332
+    "-20+2*6/(2-7)", // -22.4
+    "5+4-3+6/1*5", // 36
+    "-5+4-3+6-3/1*5", // -13
+    "-20-(104*5)+1", // -539
+    "-20-(-104*5)+1", // 501
+    "1.5+2.5", // 4
+    "(-5+(3+(2*3-(-2.5*-2+5/3))+7))", // 4.3333
+    "-5+(3+(2*3-(-2.5*-2))+7)", // 6
+    "-5+(3+(2*3-(-2.5*(-2)))+7)", // 6
+    "(2+3*4)-4", // 10
+    "((2+3)*4)-4/-(3-1)", // 22
+    "((2+3)*4)-4/-(-3-1)", // 19
+    "-20+2*6/-(-2-1)", // -16
+    "-20+(2*6/-(-2-1)+5*2)", // -6
+    "-(1.25-2.51)", // 1.259999999998
+    "-(-1.25-2.51)" // 3.76
+];
 
-function calcular() {
-    let expressao = inputExpressao.value;
+function exibirResultadoNoVisor(resultado) {
+    inputResultado.value += `${inputExpressao.value} = ${resultado}\n`;
+}
 
-    let numeros = extraiNumeros(expressao);
-    let sinais = extraiSinais(expressao);
+function avaliarExpressao(expressao) {
+    let arr = expressao.replaceAll(',', '.').split('').filter(e => e != ' ');
+    
+    if(possuiParentesesIncompletos(arr)) {
+        return exibirResultadoNoVisor("Parenteses incompletos");
+    }
+    if(possuiOperadoresInconsistentes(arr)) {
+        return exibirResultadoNoVisor("Operadores inconsistentes");
+    }
 
-    console.log(numeros);
-    console.log(sinais);
+    while( arr.findIndex(e => e == ')' ) >= 0 ) {
+        let fimParenteses = arr.findIndex(e => e == ')' );
 
-    while (sinais.length > 0) {
-        let c = 0;
-        let indice = procuraPrimeiraOperacao(sinais);
-        let op = sinais[indice];
-        // console.log(op)
+        let inicioParenteses = buscarParentesesDeAbertura(fimParenteses, arr);
+        
+        let expressaoEntreParenteses = arr.slice(inicioParenteses, fimParenteses+1);
+        
+        let resultado = resolverExpressao(expressaoEntreParenteses);
 
-        if (op == ')') {
-            let inicio = buscarParentesesDeAbertura(indice, sinais);
-            // console.log(indice, op, inicio);
-            let s = sinais.splice(inicio, indice-inicio+1);
-            // console.log(s, sinais)
-            let n = numeros.splice(inicio, indice-inicio);
-            c = resolverParenteses(s, n);
-            // console.log(c)
-            numeros.splice(inicio, 0, c);
-        }
-        else {
+        arr.splice(inicioParenteses, fimParenteses-inicioParenteses+1, resultado);
+    }
+
+    let resultado = resolverExpressao(arr);
+    exibirResultadoNoVisor(resultado);
+
+}
+
+function resolverExpressao(expressao) {
+    let expr = expressao.filter(e => e != '(' && e != ')' && e != '')
+    let numeros = extraiNumeros(expr);
+    let operadores = extraiSinais(expr);
+
+    if(operadores.length == 0) {
+        return numeros[0];
+    }
+    else {
+        while(operadores.length > 0){
+            let indice = procuraPrimeiraOperacao(operadores);
+            
             let a = numeros[indice];
-            let b = numeros[indice + 1];
-            // console.log(numeros)
-
-            c = aplicar(a, b, op);
-            // console.table([a, op, b, c]);
-
+            let b = numeros[indice+1];
+            let op = operadores[indice];
+            let c = aplicar(a, b, op);
+            
             numeros[indice] = c;
             numeros.splice(indice + 1, 1);
-            sinais.splice(indice, 1);
+            operadores.splice(indice, 1);
         }
+    
+        let resultado = numeros[0];
+        return resultado;
     }
-    let resultado = numeros[0];
-    inputResultado.value += `${expressao} = ${resultado} \n`;
 }
 
 function aplicar(a, b, operador) {
     if (operador == '+') return a + b;
     if (operador == '-') return a - b;
     if (operador == '*') return a * b;
-    if (operador == '/') return a / b;
+    if (operador == '/') {
+        if(b == 0) {
+            exibirResultadoNoVisor("Não é permitido dividir por zero");
+            throw new Error("Não é permitido dividir por zero");
+        }   
+        else {
+            return a / b;
+        }
+    }
 }
 
 function procuraPrimeiraOperacao(operadores) {
@@ -116,66 +152,53 @@ function procuraPrimeiraOperacao(operadores) {
 }
 
 function extraiSinais(expressao) {
-    let arr = expressao.replaceAll(',', '.').split('')
-        .filter(e => e != ' ');
 
-    // console.log(arr)
+    let arr = expressao;
+    let operadores = [];
+
     for(let i = 0; i < arr.length; i++) {
-        if(i > 0 && arr[i] == '-' && arr[i-1] == '(') {
-            // console.log([i, arr[i]]);
-            arr.splice(i, 1);
+        if(/[+*\/]/.test(arr[i])) {
+            operadores.push(arr[i]);
         }
-        // if(arr[i] == '-' && arr[i+1] == '(') {
-        //     arr[i] = '*';
-        // }
-    }
-
-    arr = arr.filter(e => /\D/.test(e))
-        .filter(e => e != '.');
-
-    if(arr[0] == '-' && arr.length > 1){
-        arr.splice(0, 1);
+        else if(arr[i] == '-' && /\d/.test(arr[i-1]) && /\d/.test(arr[i+1])) {
+            operadores.push(arr[i]);
+        }
     }
         
-    return arr;
+    return operadores;
 }
 
 function extraiNumeros(expressao) {
-    let arr = expressao.replaceAll(',', '.').split('').filter(e => e != ' ');
-
-    // console.log(arr);
-
+    let arr = expressao;
     let numeroString = '';
     let numeros = [];
 
     for(let i = 0; i < arr.length; i++){
-        // console.log([i, arr[i], numeroString]);
-        if( (i == 0 || arr[i-1] == '(') && arr[i] == '-') {
-            numeroString += arr[i];
-            continue;
-        }
+        if( arr[i] == '-' && ( /[+*\/]/.test(arr[i-1]) || i == 0) ) {
 
+            if(arr[i+1] < 0) {
+                arr[i+1] *= -1;
+                arr.splice(i, 1);
+            }
+            else {
+                numeroString += arr[i];
+                continue;
+            }
+        }
+        
         if(/\d/.test(arr[i]) || arr[i] == '.'){
             numeroString += arr[i];
         }
-        
-        if(/[-+*\/]/.test(arr[i])) {
-            // if(arr[i] == '-' && arr[i+1] == '(') {
-            //     console.log(i)
-            //     numeros.push(-1);
-            //     numeroString = '';
-            // }
-            // else{
+        else if(/[-+*\/]/.test(arr[i])) {
             numeros.push(numeroString);
             numeroString = '';
         }
-        // else {
-        //     console.log("Operação inválida");
-        // }
 
         if(i == arr.length-1) {
-            numeros.push(numeroString);
-            numeroString = '';
+            if(numeroString != '') {
+                numeros.push(numeroString);
+                numeroString = '';
+            }
         }
     }
     return numeros.map(e => parseFloat(e));
@@ -190,24 +213,36 @@ function buscarParentesesDeAbertura(indice, arr) {
     return -1;
 }
 
-function resolverParenteses(sinais, numeros) {
-    let arr = sinais.filter(e => e != '(' && e != ')');
-    
-    while(arr.length > 0){
-        let indice = procuraPrimeiraOperacao(arr);
-        
-        let a = numeros[indice];
-        let b = numeros[indice+1];
-        let op = arr[indice];
-        let c = aplicar(a, b, op);
-        // console.table([a, op, b, c]);
-        
-        numeros[indice] = c;
-        numeros.splice(indice + 1, 1);
-        arr.splice(indice, 1);
+function possuiParentesesIncompletos(expressao) {
+    let arr = expressao;
+    let qtdeParenteseAbrindo = 0;
+    let qtdeParenteseFechando = 0;
+
+    for(let i = 0; i < arr.length; i++) {
+        if(arr[i] == '(') {
+            qtdeParenteseAbrindo++;
+        }
+        if(arr[i] == ')') {
+            qtdeParenteseFechando++;
+        }
     }
 
-    let resultado = numeros[0];
-    return resultado;
-    
+    if(qtdeParenteseAbrindo != qtdeParenteseFechando) {
+        return true;
+    }
+    return false;
+}
+
+function possuiOperadoresInconsistentes(expressao) {
+    let arr = expressao;
+    for(let i = 0; i < arr.length; i++) {
+        let elemento = arr[i];
+
+        if( /[+*\/]/.test(elemento) ) {
+            if( /[+*\/]/.test(arr[i+1]) ) {
+                return true;
+            }
+        }
+    }
+    return false;
 }
