@@ -15,7 +15,8 @@ btnLimparHistorico.addEventListener('click', () => {
 
 let btnCalcular = document.querySelector('#calcular');
 btnCalcular.addEventListener('click', () => {
-    avaliarExpressao(inputExpressao.value);
+    let resultado = avaliarExpressao(inputExpressao.value);
+    exibirResultadoNoVisor(resultado);
 });
 
 let btnLimparEntrada = document.querySelector('#cancelar');
@@ -44,7 +45,9 @@ let testes = [
     "-20+2*6/-(-2-1)", // -16
     "-20+(2*6/-(-2-1)+5*2)", // -6
     "-(1.25-2.51)", // 1.259999999998
-    "-(-1.25-2.51)" // 3.76
+    "-(-1.25-2.51)", // 3.76
+    "(0.25+(2*(5+2)-10)+(3-2/4*(1+6*2)))", // 0.75
+    "(0.25+-(2*(5+2)-10)+(3-2/4*(1+6*2)))" // -7,25
 ];
 
 function exibirResultadoNoVisor(resultado) {
@@ -54,11 +57,29 @@ function exibirResultadoNoVisor(resultado) {
 function avaliarExpressao(expressao) {
     let arr = expressao.replaceAll(',', '.').split('').filter(e => e != ' ');
     
+    if(iniciaComOperadorInvalido(arr)){
+        return exibirResultadoNoVisor("Erro no início da expressão");
+    }
+    if(possuiCaracteresInvalidos(arr)) {
+        return exibirResultadoNoVisor("Expressão possui caractere inválido");
+    }
     if(possuiParentesesIncompletos(arr)) {
-        return exibirResultadoNoVisor("Parenteses incompletos");
+        return exibirResultadoNoVisor("Parênteses incompletos");
     }
     if(possuiOperadoresInconsistentes(arr)) {
         return exibirResultadoNoVisor("Operadores inconsistentes");
+    }
+    if(terminaComOperadorInvalido(arr)) {
+        return exibirResultadoNoVisor("Erro no final da expressão");
+    }
+    
+    if(arr[0] == '+') {
+        arr.unshift('0');
+    }
+    for(let i = 0; i < arr.length; i++) {
+        if(arr[i] == '+' && arr[i-1] == '-') {
+            arr.splice(i, 1)
+        }
     }
 
     while( arr.findIndex(e => e == ')' ) >= 0 ) {
@@ -74,7 +95,7 @@ function avaliarExpressao(expressao) {
     }
 
     let resultado = resolverExpressao(arr);
-    exibirResultadoNoVisor(resultado);
+    return resultado;
 
 }
 
@@ -242,7 +263,32 @@ function possuiOperadoresInconsistentes(expressao) {
             if( /[+*\/]/.test(arr[i+1]) ) {
                 return true;
             }
+        } else if (elemento == '-') {
+            if(arr[i+1] == '/' || arr[i+1] == '*') {
+                return true;
+            }
         }
     }
     return false;
+}
+
+function iniciaComOperadorInvalido(expressao) {
+    let arr = expressao;
+    if(/[.&,;:|?%$@!=*\/]/.test(arr[0])) {
+        return true;
+    }
+    return false;
+}
+
+function terminaComOperadorInvalido(expressao) {
+    let arr = expressao;
+    let elemento = arr[arr.length-1];
+    if(/[-.&,;:|?%$@!=+*\/]/.test(elemento)) {
+        return true;
+    }
+    return false;
+}
+
+function possuiCaracteresInvalidos(expressao) {
+    return expressao.some(e => /[a-zA-Z&;:|?%$@!=]/.test(e));
 }
