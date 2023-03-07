@@ -16,7 +16,9 @@ btnLimparHistorico.addEventListener('click', () => {
 let btnCalcular = document.querySelector('#calcular');
 btnCalcular.addEventListener('click', () => {
     let resultado = avaliarExpressao(inputExpressao.value);
-    exibirResultadoNoVisor(resultado);
+    if(resultado != null || resultado != undefined) {
+        exibirResultadoNoVisor(resultado);
+    }
 });
 
 let btnLimparEntrada = document.querySelector('#cancelar');
